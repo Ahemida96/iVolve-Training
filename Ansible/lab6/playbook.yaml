@@ -1,0 +1,16 @@
+---
+- name: Test Connection between Control and Managed Nodes
+  hosts: all
+  tasks:
+    - name: Ping hosts
+      ping:
+
+    - name: Gather facts
+      setup:
+
+    - name: Save gathered data to a file
+      local_action: 
+        module: copy
+        content: "{{ ansible_facts | to_nice_json }}"
+        dest: "host_facts_{{ inventory_hostname }}.json"
+      delegate_to: localhost
