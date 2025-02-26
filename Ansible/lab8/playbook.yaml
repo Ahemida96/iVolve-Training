@@ -1,0 +1,61 @@
+---
+- name: Configure DB Server
+  hosts: all
+  become: true
+  vars_files:
+    - secret.yaml
+  tasks:
+    - name: Ubuntu Update
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400
+
+    - name: Install MySQL Server and Required Packages
+      apt:
+        name:
+          - mysql-server
+          - mysql-client
+          - python3-pymysql
+          - python3
+        state: present
+
+    - name: "Start MySQL Service"
+      service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: Set MySQL root password
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        name: root
+        host: localhost
+        password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      notify:
+        - restart mysql
+      
+    - name: Create MySQL User
+      mysql_user:
+        name: "{{ mysql_user }}"
+        password: "{{ mysql_user_password }}"
+        host: "%"
+        priv: "{{ database_name }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Create MySQL Database
+      mysql_db:
+        name: "{{ database_name }}"
+        check_implicit_admin: true
+        login_user: "{{ mysql_user }}"
+        login_password: "{{ mysql_user_password }}"
+        state: present
+
+  handlers:
+    - name: restart mysql
+      service: 
+        name: mysqld
+        state: restarted
