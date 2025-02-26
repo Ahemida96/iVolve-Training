@@ -1,0 +1,27 @@
+---
+- name: Configure Web Server
+  hosts: all
+  become: true
+  tasks:
+    - name: "Ubuntu Update"
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: "Install nginx"
+      apt:
+        name: ["nginx"]
+        state: latest
+        
+    - name: "Copy index file"
+      copy:
+        src: index.html
+        dest: /var/www/html/index.html
+        mode: '0644'
+
+  handlers:
+    - name: "Start Nginx"
+      service:
+        name: nginx
+        state: started
+        enabled: true
