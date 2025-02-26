@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./iVolve_logo.jpg" alt="iVolve Technologies Logo" width="200"/>
+    <img src="./assets/iVolve_logo.jpg" alt="iVolve Technologies Logo" width="200"/>
 </p>
 
 # iVolve Technologies DevOps Training
