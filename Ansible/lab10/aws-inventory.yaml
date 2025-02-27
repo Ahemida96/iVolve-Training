@@ -1,0 +1,8 @@
+# make sure to install amazon.aws Collection
+# ansible-galaxy collection install amazon.aws
+
+plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+filters:
+  instance-state-name: running
