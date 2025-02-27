@@ -1,0 +1,55 @@
+---
+- name: Install Java-17
+  ansible.builtin.apt:
+    name: 
+    - openjdk-17-jdk 
+    - openjdk-17-jre
+    state: present
+
+- name: Add Jenkins repository key
+  ansible.builtin.apt_key:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    state: present
+
+- name: Add Jenkins repository
+  ansible.builtin.apt_repository:
+    repo: deb https://pkg.jenkins.io/debian-stable binary/
+    state: present
+
+- name: Install Jenkins
+  ansible.builtin.apt:
+    name: jenkins
+    state: present
+    update_cache: true
+
+- name: Start and enable Jenkins
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
+
+- name: Open port 8080 in UFW
+  command: ufw allow 8080/tcp
+  ignore_errors: true
+  become: true
+
+- name: Reload UFW to apply changes
+  command: ufw reload
+  ignore_errors: true
+  become: true
+
+# - name: Get the Initial Password for Jenkins (Remote)
+#   become: true
+#   ansible.builtin.slurp:
+#     src: /var/lib/jenkins/secrets/initialAdminPassword
+#   register: jenkins_password
+
+- name: Store file into /tmp/fetched/host.example.com/tmp/somefile
+  ansible.builtin.fetch:
+    src: /var/lib/jenkins/secrets/initialAdminPassword
+    dest: ./jenkins_initial_password
+    flat: true
+
+- name: Display Password Location
+  ansible.builtin.debug:
+    msg: "Password saved to ./jenkins_initial_password"

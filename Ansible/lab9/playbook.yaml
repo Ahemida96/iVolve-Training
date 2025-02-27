@@ -1,0 +1,7 @@
+---
+- name: Install Docker, Opensift and Jenkins using costum roles
+  hosts: all
+  roles:
+  - docker-role
+  - openshift-role
+  - jenkins-role
