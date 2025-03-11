@@ -88,12 +88,10 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
     ```
 
 3. **Access Jenkins:**
-    Open your browser and go to `http://your_server_ip_or_domain:8080`
+    Open your browser and go to `http://your_server_ip:8080`
 
 ### Additional Configuration
 - To persist Jenkins data, you can mount a volume:
     ```sh
     docker run -d -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home --name jenkins jenkins/jenkins:lts
     ```
-
-Follow these steps to install Jenkins either as a service or as a container. Happy building!
