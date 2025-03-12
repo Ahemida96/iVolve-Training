@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    def app
+
+    stages {
+        
+        stage('Checkout') {
+            steps {
+                Checkout scm
+            }
+            post {
+                success {
+                    echo "This will run only if succeeded"
+                }
+                failure {
+                    echo "This will run only if failed"
+                }
+                always {
+                    echo "This will always run"
+                }
+            }
+        }
+
+        stage("Build & Test Docker Image") {
+            steps {
+                script {
+                    app = docker.build("webapp")
+
+                    app.inside {
+                        sh 'echo "Testing.."; sleep 2'
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
+                        app.push("${env.BUILD_ID}")
+                        app.push("latest")
+                    }
+                }
+            }
+        }
+
+        stage('Delete local Docker Images') {
+            steps {
+                sh 'docker rmi webapp'
+            }
+        }
+
+        stage('Edit Kubernetes Deployment') {
+            steps {
+                script {
+                    sh 'kubectl set image deployment/webapp webapp=webapp:${env.BUILD_ID}'
+                }
+            }
+        }
+
+    }
+}
