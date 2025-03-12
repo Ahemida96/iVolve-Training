@@ -4,23 +4,6 @@ pipeline {
     def app
 
     stages {
-        
-        stage('Checkout') {
-            steps {
-                Checkout scm
-            }
-            post {
-                success {
-                    echo "This will run only if succeeded"
-                }
-                failure {
-                    echo "This will run only if failed"
-                }
-                always {
-                    echo "This will always run"
-                }
-            }
-        }
 
         stage("Build & Test Docker Image") {
             steps {
@@ -30,6 +13,17 @@ pipeline {
                     app.inside {
                         sh 'echo "Testing.."; sleep 2'
                     }
+                }
+            }
+            post {
+                success {
+                    echo "Image built successfully"
+                }
+                failure {
+                    echo "Image build failed"
+                }
+                always {
+                    echo "Go to the next stage"
                 }
             }
         }
