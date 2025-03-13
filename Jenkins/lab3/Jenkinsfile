@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    environment {
+        BRANSH_NAME = 'Master'
+        GITHUB_CREDENTIALS_ID = 'github-credentials'
+        GITHUB_URL = 'https://github.com/Ahemida96/iVolve-Training.git'
+        REGISTRY = "docker.io"
+        REGISTRY_CREDENTIALS_ID = 'dockerhub-credentials'
+        IMAGE_NAME = 'webapp'
+    }
+
+    stages {
+
+        stage('Clone Git') {
+            steps {
+                git branch: BRANSH_NAME,
+                    credentialsId: GITHUB_CREDENTIALS_ID,
+                    url: GITHUB_URL
+            }
+        }
+
+        stage("Build & Test Docker Image") {
+            steps {
+                script {
+                    sh 'docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${env.BUILD_ID} .'
+                }
+            }
+            post {
+                success {
+                    echo "Image built successfully"
+                }
+                failure {
+                    echo "Image build failed"
+                }
+                always {
+                    echo "Go to the next stage"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: env.REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u ${env.USERNAME} -p ${env.PASSWORD}'
+                        sh 'docker push ${env.REGISTRY}/${env.IMAGE_NAME}:${env.BUILD_ID}'
+                    }
+                }
+            }
+        }
+
+        stage('Delete local Docker Images') {
+            steps {
+                sh 'docker rmi ${env.REGISTRY}/${env.IMAGE_NAME}:${env.BUILD_ID}'
+            }
+        }
+
+        // stage('Edit Kubernetes Deployment') {
+        //     steps {
+        //         script {
+        //             sh 'kubectl set image deployment/webapp webapp=webapp:${env.BUILD_ID}'
+        //         }
+        //     }
+        // }
+
+    }
+}
