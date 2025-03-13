@@ -12,13 +12,13 @@ pipeline {
 
     stages {
 
-        stage('Clone Git') {
-            steps {
-                git branch: BRANSH_NAME,
-                    credentialsId: GITHUB_CREDENTIALS_ID,
-                    url: GITHUB_URL
-            }
-        }
+        // stage('Clone Git') {
+        //     steps {
+        //         git branch: BRANSH_NAME,
+        //             credentialsId: GITHUB_CREDENTIALS_ID,
+        //             url: GITHUB_URL
+        //     }
+        // }
 
         stage("Build & Test Docker Image") {
             steps {
@@ -56,13 +56,7 @@ pipeline {
             }
         }
 
-        // stage('Edit Kubernetes Deployment') {
-        //     steps {
-        //         script {
-        //             sh 'kubectl set image deployment/webapp webapp=webapp:${env.BUILD_ID}'
-        //         }
-        //     }
-        // }
+
 
     }
 }
