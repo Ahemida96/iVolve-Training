@@ -12,18 +12,18 @@ pipeline {
 
     stages {
 
-        // stage('Clone Git') {
-        //     steps {
-        //         git branch: BRANSH_NAME,
-        //             credentialsId: GITHUB_CREDENTIALS_ID,
-        //             url: GITHUB_URL
-        //     }
-        // }
+        stage('Clone Git') {
+            steps {
+                git branch: BRANSH_NAME,
+                    credentialsId: GITHUB_CREDENTIALS_ID,
+                    url: GITHUB_URL
+            }
+        }
 
         stage("Build & Test Docker Image") {
             steps {
                 script {
-                    sh 'docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${env.BUILD_ID} .'
+                    sh 'docker build -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_ID} .'
                 }
             }
             post {
@@ -42,9 +42,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: env.REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u ${env.USERNAME} -p ${env.PASSWORD}'
-                        sh 'docker push ${env.REGISTRY}/${env.IMAGE_NAME}:${env.BUILD_ID}'
+                    withCredentials([string(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u ${USERNAME} -p ${PASSWORD}'
+                        sh 'docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_ID}'
                     }
                 }
             }
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Delete local Docker Images') {
             steps {
-                sh 'docker rmi ${env.REGISTRY}/${env.IMAGE_NAME}:${env.BUILD_ID}'
+                sh 'docker rmi ${REGISTRY}/${IMAGE_NAME}:${BUILD_ID}'
             }
         }
 
