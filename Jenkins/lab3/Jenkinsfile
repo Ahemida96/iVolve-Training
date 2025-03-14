@@ -5,9 +5,10 @@ pipeline {
         BRANSH_NAME = 'Master'
         GITHUB_CREDENTIALS_ID = 'github-credentials'
         GITHUB_URL = 'https://github.com/Ahemida96/iVolve-Training.git'
-        REGISTRY = "docker.io"
+        REGISTRY_USERNAME = "ahemida96"
         REGISTRY_CREDENTIALS_ID = 'dockerhub-credentials'
         IMAGE_NAME = 'webapp'
+        k8s_deployment = 'Jenkins/lab3/k8s/deployment.yaml'
     }
 
     stages {
@@ -23,7 +24,8 @@ pipeline {
         stage("Build & Test Docker Image") {
             steps {
                 script {
-                    sh 'docker build -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_ID} .'
+                    sh 'ls'
+                    sh 'docker build -t ${REGISTRY_USERNAME}/${IMAGE_NAME}:${BUILD_ID} Jenkins/lab3/.'
                 }
             }
             post {
@@ -33,30 +35,61 @@ pipeline {
                 failure {
                     echo "Image build failed"
                 }
-                always {
-                    echo "Go to the next stage"
-                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u ${USERNAME} -p ${PASSWORD}'
-                        sh 'docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_ID}'
+                        sh 'docker push ${REGISTRY_USERNAME}/${IMAGE_NAME}:${BUILD_ID}'
                     }
+                }
+            }
+            post {
+                success {
+                    echo "Image pushed successfully to Docker Hub"
+                }
+                failure {
+                    echo "Image push failed"
                 }
             }
         }
 
         stage('Delete local Docker Images') {
             steps {
-                sh 'docker rmi ${REGISTRY}/${IMAGE_NAME}:${BUILD_ID}'
+                sh 'docker rmi ${REGISTRY_USERNAME}/${IMAGE_NAME}:${BUILD_ID}'
+            }
+            post {
+                success {
+                    echo "Local Docker image deleted successfully"
+                }
+                failure {
+                    echo "Local Docker image deletion failed"
+                }
             }
         }
 
-
+        stage('Deploy to Kubernetes') {
+            agent {
+                label 'k8s'
+            }
+            steps {
+                script {
+                    sh 'sed -i "s/${REGISTRY_USERNAME}/${IMAGE_NAME}:*/${REGISTRY_USERNAME}/${IMAGE_NAME}:${BUILD_ID}/g" ${k8s_deployment}'
+                    sh 'kubectl apply -f Jenkins/lab3/deployment.yaml'
+                }
+            }
+            post {
+                success {
+                    echo "Deployment successful"
+                }
+                failure {
+                    echo "Deployment failed"
+                }
+            }
+        }
 
     }
 }
