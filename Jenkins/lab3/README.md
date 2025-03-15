@@ -146,6 +146,12 @@ stage("Deploy to Minikube") {
 - **kubectl apply** – Deploys the application and service to the Minikube cluster.  
 
 ---
+## **Test application**
+```groovy
+minikube service [ - url] webapp
+```
+
+---
 ## Final Result
 - **Pipeline**
 ![Pipeline](assets/Final-Results.png)  
