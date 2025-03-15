@@ -8,7 +8,10 @@ pipeline {
         REGISTRY_USERNAME = "ahemida96"
         REGISTRY_CREDENTIALS_ID = 'dockerhub-credentials'
         IMAGE_NAME = 'webapp'
-        k8s_deployment = 'Jenkins/lab3/k8s/deployment.yaml'
+        K8S_DEPLOYMENT = 'Jenkins/lab3/k8s/webapp-deploy.yaml'
+        K8S_SERVICE = 'Jenkins/lab3/k8s/webapp-service.yaml'
+        K8S_CRED_ID = 'kubeconfig'
+        MINIKUBE_SERVER = "https://192.168.74.138:8443"
     }
 
     stages {
@@ -72,13 +75,13 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            agent {
-                label 'k8s'
-            }
             steps {
                 script {
-                    sh 'sed -i "s/${REGISTRY_USERNAME}/${IMAGE_NAME}:*/${REGISTRY_USERNAME}/${IMAGE_NAME}:${BUILD_ID}/g" ${k8s_deployment}'
-                    sh 'kubectl apply -f Jenkins/lab3/deployment.yaml'
+                    
+                    sh "sed -i 's|${REGISTRY_USERNAME}/${IMAGE_NAME}:.*|${REGISTRY_USERNAME}/${IMAGE_NAME}:${BUILD_ID}|g' ${K8S_DEPLOYMENT}"
+                    withCredentials([file(credentialsId: "${K8S_CRED_ID}", variable: 'KUBECONFIG')]) {
+                        sh "export KUBECONFIG=${KUBECONFIG} && kubectl --server ${MINIKUBE_SERVER}  --insecure-skip-tls-verify=true apply -f ${K8S_DEPLOYMENT}"
+                    }
                 }
             }
             post {
