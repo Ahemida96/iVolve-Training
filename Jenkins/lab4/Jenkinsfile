@@ -1,0 +1,100 @@
+#!/usr/bin/env groovy
+@Library('IvolveSharedLibrary')_
+
+pipeline {
+    agent any
+
+    environment {
+        BRANSH_NAME = 'Master'
+        GITHUB_CREDENTIALS_ID = 'github-credentials'
+        GITHUB_URL = 'https://github.com/Ahemida96/iVolve-Training.git'
+        REGISTRY_USERNAME = "ahemida96"
+        REGISTRY_CREDENTIALS_ID = 'dockerhub-credentials'
+        IMAGE_NAME = 'webapp'
+        K8S_DEPLOYMENT = 'Jenkins/lab4/k8s/webapp-deploy.yaml'
+        K8S_CRED_ID = 'kubeconfig'
+        MINIKUBE_SERVER = "https://192.168.74.138:8443"
+    }
+
+    stages {
+
+        stage('Clone Git') {
+            steps {
+                git branch: BRANSH_NAME,
+                    credentialsId: GITHUB_CREDENTIALS_ID,
+                    url: GITHUB_URL
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                script {
+                    dir('Jenkins/lab4/app') {
+                        UnitTest()
+                    }
+                }
+            }
+            post {
+                success {
+                    echo "Unit Test finished successfully"
+                }
+                failure {
+                    echo "Unit Test failed"
+                }
+            }
+        }
+
+        stage('Java Build') {
+            steps {
+                script {
+                    dir('Jenkins/lab4/app') {
+                        JavaBuild()
+                    }
+                }
+            }
+            post {
+                success {
+                    echo "Java Build finished successfully"
+                }
+                failure {
+                    echo "Java Build failed"
+                }
+            }
+        }
+
+        stage("Docker Process") {
+            steps {
+                script {
+                    DockerProcess(IMAGE_NAME, REGISTRY_CREDENTIALS_ID)
+                }
+            }
+            post {
+                success {
+                    echo "Docker Process finished successfully"
+                }
+                failure {
+                    echo "Docker Process failed"
+                }
+            }
+        }
+
+
+        stage('Kubernetes Process') {
+            steps {
+                script {
+                    
+                    KubernetesProcess(IMAGE_NAME, K8S_CRED_ID, MINIKUBE_SERVER, K8S_DEPLOYMENT)
+                }
+            }
+            post {
+                success {
+                    echo "Kubernetes Process finished successfully"
+                }
+                failure {
+                    echo "Kubernetes Process failed"
+                }
+            }
+        }
+
+    }
+}
